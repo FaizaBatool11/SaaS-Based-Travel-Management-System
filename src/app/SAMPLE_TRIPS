@@ -1,0 +1,56 @@
+type Mode = "Bus" | "Train";
+
+type Trip = {
+  id: string;
+  agency: string;
+  from: string;
+  to: string;
+  depart: string; // ISO date string
+  mode: Mode;
+  classType: "Economy" | "Business";
+  price: number;
+  seatsAvailable: number;
+};
+
+const SAMPLE_TRIPS: Trip[] = [
+  {
+    id: "T1",
+    agency: "Atlas Travels",
+    from: "Lahore",
+    to: "Karachi",
+    depart: "2025-08-20T09:30:00",
+    mode: "Bus",
+    classType: "Economy",
+    price: 4500,
+    seatsAvailable: 12,
+  },
+  {
+    id: "T2",
+    agency: "Punjab Express",
+    from: "Islamabad",
+    to: "Lahore",
+    depart: "2025-08-18T14:00:00",
+    mode: "Train",
+    classType: "Business",
+    price: 1500,
+    seatsAvailable: 5,
+  },
+  {
+    id: "T3",
+    agency: "CityLine",
+    from: "Karachi",
+    to: "Hyderabad",
+    depart: "2025-08-19T06:45:00",
+    mode: "Bus",
+    classType: "Economy",
+    price: 800,
+    seatsAvailable: 25,
+  },
+];
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleString();
+};
+
+export default SAMPLE_TRIPS;
