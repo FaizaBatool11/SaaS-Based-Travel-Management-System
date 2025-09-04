@@ -216,6 +216,9 @@ export default function Login() {
       const response = await axios.post("http://localhost:5000/api/auth/Login", formData);
       const { token, user } = response.data;
 
+      // 1️⃣ Remove previous active agency
+      localStorage.removeItem("activeAgencyId");
+
       // 1️⃣ Save token & user info
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
@@ -225,18 +228,26 @@ export default function Login() {
         localStorage.setItem("agencies", JSON.stringify(user.agencies));
       }
 
+      // // 2️⃣ Role-based redirect
+      // if (user.role === "agency_admin") {
+      //   router.push("/SelectAgency");
+      // } else if (user.role === "booking_agent") {
+      //   if (user.agencies?.length > 0) {
+      //     const agencyId = user.agencies[0].id; // 👈 backend se agencyId aa rahi hogi
+      //     router.push(`/BookingDashboard/${agencyId}`);  // ✅ Dynamic route par redirect
+      //   } else {
+      //     alert("No agency assigned. Contact admin.");
+      //   }
+      // } else {
+      //   router.push("/");
+      // }
+
       // 2️⃣ Role-based redirect
-      if (user.role === "agency_admin") {
-        router.push("/SelectAgency");
-      } else if (user.role === "booking_agent") {
-        if (user.agencies?.length > 0) {
-          const agencyId = user.agencies[0].id; // 👈 backend se agencyId aa rahi hogi
-          router.push(`/BookingDashboard/${agencyId}`);  // ✅ Dynamic route par redirect
-        } else {
-          alert("No agency assigned. Contact admin.");
-        }
+      if (user.agencies?.length > 0) {
+        const agencyId = user.agencies[0].id;
+        router.push(`/Admin/${agencyId}`);
       } else {
-        router.push("/");
+        alert("No agency assigned. Contact admin.");
       }
 
       console.log("Login successful:", user);

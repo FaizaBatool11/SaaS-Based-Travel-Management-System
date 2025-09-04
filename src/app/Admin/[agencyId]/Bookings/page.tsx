@@ -57,19 +57,19 @@ export default function BookingsPage() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white px-6 py-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-800">Bookings</h1>
-        <p className="text-gray-600 mt-2">
-          Easily add, update, and organize your bookings to keep every journey hassle-free.
-        </p>
-      </div>
+    <div className="space-y-10">
+      {/* Header with Search + Add Button on Right */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Left Side - Heading */}
+        <div>
+          <h1 className="text-2xl font-bold">Bookings</h1>
+          <p className="text-gray-600 mt-2">
+            Easily add, update, and organize your bookings to keep every journey hassle-free.
+          </p>
+        </div>
 
-      {/* Main */}
-      <main className="p-6 space-y-8">
-        {/* Search + Add Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Right Side - Search + Add Button */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
             <input
@@ -89,6 +89,7 @@ export default function BookingsPage() {
             Add Booking
           </button>
         </div>
+      </div>
 
         {/* Bookings Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -121,7 +122,6 @@ export default function BookingsPage() {
             </tbody>
           </table>
         </div>
-      </main>
 
       {/* Add Booking Modal */}
       {showModal && (
