@@ -243,12 +243,19 @@ export default function Login() {
       // }
 
       // 2️⃣ Role-based redirect
-      if (user.agencies?.length > 0) {
-        const agencyId = user.agencies[0].id;
-        router.push(`/Admin/${agencyId}`);
+      if (user.role === "super_admin") {
+      router.push("/"); // Super admin dashboard
+    } else if (user.role === "agency_admin") {
+      if (!user.agencies || user.agencies.length === 0) {
+        // First-time agency admin
+        router.push("/AddAgencyPage");
       } else {
-        alert("No agency assigned. Contact admin.");
+        const agencyId = user.agencies[0].id; // pick the first assigned agency
+        router.push(`/Admin/${agencyId}`); // Dynamic admin dashboard
       }
+    } else {
+      router.push("/"); // fallback
+    }
 
       console.log("Login successful:", user);
     } catch (err) {
