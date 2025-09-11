@@ -181,17 +181,15 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FaUser, FaEnvelope, FaLock, FaUserShield, FaBuilding } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 import axios, { AxiosError } from "axios";
 
 interface FormData {
   fullName: string;
   email: string;
   password: string;
-  role: string;
-  agencyId: string;
 }
 
 export default function Signup() {
@@ -200,24 +198,9 @@ export default function Signup() {
     fullName: "",
     email: "",
     password: "",
-    role: "",
-    agencyId: "",
   });
 
-  const [agencies, setAgencies] = useState<{ id: number; name: string }[]>([]);
-
-  // ✅ Backend se agencies list fetch karo
-  useEffect(() => {
-    axios
-    .get("http://localhost:5000/api/agencies")
-    .then((res) => {
-      console.log("Agencies fetched:", res.data);  // 👈 check console
-      setAgencies(res.data);
-    })
-    .catch((err) => console.error("Error fetching agencies:", err));
-}, []);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -229,8 +212,6 @@ export default function Signup() {
         name: formData.fullName,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
-        agencyId: formData.role === "booking_agent" ? formData.agencyId : null, // ✅ only when booking_agent
       };
 
       const response = await axios.post("http://localhost:5000/api/auth/signup", payload);
@@ -333,48 +314,6 @@ export default function Signup() {
                 required
               />
             </div>
-
-            {/* Role Selector */}
-            <div className="relative">
-              <FaUserShield style={iconStyle} className="absolute top-4 left-3 w-4 h-4" />
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="text-gray-500 w-full pl-10 pr-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition duration-300"
-                required
-              >
-                <option value="" disabled hidden>
-                  Choose Role
-                </option>
-                <option value="super_admin">Super Admin</option>
-                <option value="agency_admin">Agency Admin</option>
-                <option value="booking_agent">Booking Agent</option>
-              </select>
-            </div>
-
-            {/* Agency Selector (Only for Booking Agent) */}
-            {formData.role === "booking_agent" && (
-              <div className="relative">
-                <FaBuilding style={iconStyle} className="absolute top-4 left-3 w-4 h-4" />
-                <select
-                  name="agencyId"
-                  value={formData.agencyId}
-                  onChange={handleChange}
-                  className="text-gray-500 w-full pl-10 pr-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition duration-300"
-                  required
-                >
-                  <option value="" disabled>
-                    Select Agency
-                  </option>
-                  {agencies.map((agency) => (
-                    <option key={agency.id} value={agency.id}>
-                      {agency.name}   {/* 👈 agency ka name show hoga */}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             {/* Submit Button */}
             <motion.button

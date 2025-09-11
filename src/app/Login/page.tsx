@@ -216,53 +216,41 @@ export default function Login() {
       const response = await axios.post("http://localhost:5000/api/auth/Login", formData);
       const { token, user } = response.data;
 
-      // 1️⃣ Remove previous active agency
+      // 🔹 Clear old agency
       localStorage.removeItem("activeAgencyId");
 
-      // 1️⃣ Save token & user info
+      // 🔹 Save token & user info
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("role", user.role);
 
       if (user.agencies?.length > 0) {
         localStorage.setItem("agencies", JSON.stringify(user.agencies));
       }
 
-      // // 2️⃣ Role-based redirect
-      // if (user.role === "agency_admin") {
-      //   router.push("/SelectAgency");
-      // } else if (user.role === "booking_agent") {
-      //   if (user.agencies?.length > 0) {
-      //     const agencyId = user.agencies[0].id; // 👈 backend se agencyId aa rahi hogi
-      //     router.push(`/BookingDashboard/${agencyId}`);  // ✅ Dynamic route par redirect
-      //   } else {
-      //     alert("No agency assigned. Contact admin.");
-      //   }
-      // } else {
-      //   router.push("/");
-      // }
-
-      // 2️⃣ Role-based redirect
-      if (user.role === "super_admin") {
-      router.push("/"); // Super admin dashboard
-    } else if (user.role === "agency_admin") {
-      if (!user.agencies || user.agencies.length === 0) {
-        // First-time agency admin
-        router.push("/AddAgencyPage");
+      // 🔹 Role-based redirect (abhi sirf Owner ke liye)
+      if (user.role === "owner") {
+        if (user.agencies && user.agencies.length > 0) {
+          const agencyId = user.agencies[0].id;
+          localStorage.setItem("activeAgencyId", agencyId.toString());
+          router.push(`/Admin/${agencyId}`); // Owner dashboard
+        } else {
+          router.push("/Admin/AddAgencyPage"); // First-time owner
+        }
       } else {
-        const agencyId = user.agencies[0].id; // pick the first assigned agency
-        router.push(`/Admin/${agencyId}`); // Dynamic admin dashboard
+        // Future roles ke liye fallback
+        router.push("/");
       }
-    } else {
-      router.push("/"); // fallback
-    }
 
       console.log("Login successful:", user);
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      console.error(error.response?.data?.message || error.message || err);
-      alert(error.response?.data?.message || error.message || "Login failed!");
-    }
+  if (axios.isAxiosError(err)) {
+    console.error(err.response?.data?.message || err.message);
+    alert(err.response?.data?.message || err.message || "Login failed!");
+  } else {
+    console.error(err);
+    alert("Unexpected error occurred");
+  }
+}
   };
 
   const iconStyle = { fill: "white", stroke: "black", strokeWidth: 20 };
@@ -272,9 +260,8 @@ export default function Login() {
       {/* Navbar */}
       <header className="bg-gradient-to-b from-blue-50 to-white flex justify-between items-center px-8 py-4 shadow-sm">
         <div className="flex items-center space-x-2">
-          {/* Placeholder Logo Icon (bus+train idea) */}
           <img
-            src="https://cdn-icons-png.flaticon.com/512/69/69906.png" 
+            src="https://cdn-icons-png.flaticon.com/512/69/69906.png"
             alt="RideWay Logo"
             className="h-8 w-8"
           />
@@ -290,10 +277,7 @@ export default function Login() {
           >
             Login
           </Link>
-          <Link
-            href="/Signup"
-            className="text-gray-700 hover:text-blue-600"
-          >
+          <Link href="/Signup" className="text-gray-700 hover:text-blue-600">
             Signup
           </Link>
         </nav>
