@@ -11,10 +11,15 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Pie,
+  Cell,
+  Legend,
+  PieChart as RePieChart,
+  Label,
 } from "recharts";
 
 // Icons
-import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Plus } from "lucide-react";
+import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Plus, PieChart } from "lucide-react";
 
 type Mode = "Bus" | "Train";
 
@@ -58,39 +63,100 @@ export default function AdminDashboard() {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [activeAgency, setActiveAgency] = useState<Agency | null>(null);
 
-  const [role, setRole] = useState<string | null>(null);
+  // const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [utilization, setUtilization] = useState<{ bookedSeats: number; availableSeats: number } | null>(null);
 
-  // 🔹 Users state
-  const [users, setUsers] = useState<User[]>([]);
-  useEffect(() => {
-    const storedRole = localStorage.getItem("role");
-    setRole(storedRole);
-  }, []);
+const fetchSeatUtilization = async (agencyId: number) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token missing");
 
-  // ✅ Fetch agencies
-  useEffect(() => {
-    const fetchAgencies = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/agencies", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+    const res = await axios.get(
+      `http://localhost:5000/api/seatUtilization/${agencyId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-        const data: Agency[] = res.data;
-        setAgencies(data);
+    setUtilization(res.data);
+  } catch (err) {
+    console.error("Error fetching seat utilization:", err);
+  }
+};
 
-        if (data.length > 0) {
-          setActiveAgency(data[0]);
-          localStorage.setItem("activeAgencyId", data[0].id.toString());
-        }
-      } catch (err) {
-        console.error("Error fetching agencies:", err);
-      }
-    };
+useEffect(() => {
+  if (!activeAgency) return;
+  fetchTrips(activeAgency.id);
+  fetchStats(activeAgency.id);
+  fetchSeatUtilization(activeAgency.id); // ✅ yahan call add karo
+}, [activeAgency]);
 
-    fetchAgencies();
-  }, []);
+const fetchTrips = async (agencyId: number) => {
+  if (!agencyId) return;
+  setLoading(true);
+  setError("");
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token missing");
+
+    const res = await axios.get(
+      `http://localhost:5000/api/trips/getAllTrips?agencyId=${agencyId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setTrips(res.data || []);
+  } catch (err: any) {
+    setError(err?.response?.data?.message || "Error fetching trips");
+    setTrips([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const fetchStats = async (agencyId: number) => {
+  if (!agencyId) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token missing");
+
+    const res = await axios.get(
+      `http://localhost:5000/api/dashboard/stats/${agencyId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setStats(res.data);
+  } catch (err) {
+    console.error("Error fetching stats:", err);
+  }
+};
+
+useEffect(() => {
+  if (!activeAgency) return;
+  fetchTrips(activeAgency.id);
+  fetchStats(activeAgency.id);
+}, [activeAgency]);
+
+
+useEffect(() => {
+  const fetchAgencies = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await axios.get("http://localhost:5000/api/agencies", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAgencies(res.data);
+    } catch (err) {
+      console.error("Error fetching agencies:", err);
+    }
+  };
+
+  fetchAgencies();
+}, []); // ✅ empty deps
+
 
   // ✅ Sync active agency
   useEffect(() => {
@@ -115,93 +181,31 @@ export default function AdminDashboard() {
 
   // ✅ Switch Agency token
   useEffect(() => {
-    const switchAgency = async () => {
-      if (!activeAgency) return;
-      const oldToken = localStorage.getItem("token");
-      if (!oldToken) return;
+  const switchAgencyToken = async () => {
+    if (!activeAgency) return;
+    const oldToken = localStorage.getItem("token");
+    if (!oldToken) return;
 
-      try {
-        const res = await axios.post(
-          "http://localhost:5000/api/auth/switchAgency",
-          { agencyId: activeAgency.id },
-          { headers: { Authorization: `Bearer ${oldToken}` } }
-        );
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/switchAgency",
+        { agencyId: activeAgency.id },
+        { headers: { Authorization: `Bearer ${oldToken}` } }
+      );
 
-        localStorage.setItem("token", res.data.token);
-        console.log("Switched to agency:", activeAgency.id);
-      } catch (err) {
-        console.error("Failed to switch agency:", err);
-      }
-    };
+      localStorage.setItem("token", res.data.token);
+      console.log("Switched to agency:", activeAgency.id);
 
-    switchAgency();
-  }, [activeAgency]);
-
-  // ✅ Fetch trips
-  useEffect(() => {
-    const fetchTrips = async () => {
-      if (!activeAgency) return;
-
-      setLoading(true);
-      setError("");
-
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const res = await axios.get("http://localhost:5000/api/trips/getAllTrips", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setTrips(res.data || []);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "Error fetching trips");
-        setTrips([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (localStorage.getItem("token")) {
-      fetchTrips();
+      // ✅ Fetch trips and stats after switching
+      fetchTrips(activeAgency.id);
+      fetchStats(activeAgency.id);
+    } catch (err) {
+      console.error("Failed to switch agency:", err);
     }
-  }, [activeAgency]);
+  };
 
-  // ✅ Fetch stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!activeAgency) return;
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `http://localhost:5000/api/dashboard/stats/${activeAgency.id}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
-        setStats(res.data);
-      } catch (err) {
-        console.error("Error fetching stats:", err);
-      }
-    };
-
-    fetchStats();
-  }, [activeAgency]);
-
-  // ✅ Fetch users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!activeAgency) return;
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:5000/api/users/${activeAgency.id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        setUsers(res.data.users || []);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-    };
-    fetchUsers();
-  }, [activeAgency]);
+  switchAgencyToken();
+}, [activeAgency]);
 
   const handleAgencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const agencyIdStr = e.target.value;
@@ -218,10 +222,10 @@ export default function AdminDashboard() {
 
   const statsCards = stats
     ? [
-        { title: "Passengers", value: stats.passengers, icon: UsersIcon },
-        { title: "Trips", value: stats.trips, icon: Bus },
-        { title: "Bookings", value: stats.bookings, icon: Ticket },
-        { title: "Payments", value: "PKR 50,000", icon: CreditCard },
+        { title: "Passengers", value: stats.passengers, icon: UsersIcon, color: "blue" },
+        { title: "Trips", value: stats.trips, icon: Bus, color: "green" },
+        { title: "Bookings", value: stats.bookings, icon: Ticket, color: "purple" },
+        { title: "Payments", value: "PKR 50,000", icon: CreditCard, color: "orange" },
       ]
     : [];
 
@@ -280,7 +284,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-8">
+      {/* <div className="grid grid-cols-4 gap-8">
         {statsCards.map(({ title, value, icon: Icon }) => (
           <div
             key={title}
@@ -296,82 +300,40 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* 🔹 Users Section */}
-      {/* <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-          Agency Users
-          </h2>
-        </div>
-
-        {users.length === 0 ? (
-          <p className="text-gray-600 text-sm">No users found.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map((u) => (
-              <div key={u.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <h3 className="font-semibold">{u.name}</h3>
-                <p className="text-sm text-gray-600">{u.email}</p>
-                <span className="text-xs text-blue-600">{u.role}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div> */}
-      {/* 🔹 Users Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
-            Agency Users
-          </h2>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-8">
+        {statsCards.map(({ title, value, icon: Icon, color }) => {
+          const colorClasses: Record<string, string> = {
+            blue: "bg-blue-100 text-blue-600",
+            green: "bg-green-100 text-green-600",
+            purple: "bg-purple-100 text-purple-600",
+            orange: "bg-orange-100 text-orange-600",
+          };
 
-        {users.length === 0 ? (
-          <p className="text-gray-600 text-sm">No users found.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users
-              .filter((u) => u.role !== "owner") // ✅ owner ko skip kar diya
-              .map((u) => (
-          <div
-            key={u.id}
-            className="w-56 bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition"
-          >
-            {/* 🔹 Top Banner */}
-            <div className="h-20 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+          return (
+            <div
+              key={title}
+              className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition transform"
+            >
+              <div
+                className={`w-14 h-14 flex items-center justify-center rounded-full ${colorClasses[color]}`}
+              >
+                <Icon size={30} />
+              </div>
 
-            {/* 🔹 Profile Circle */}
-            <div className="flex justify-center -mt-10">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg font-bold shadow-md">
-                {u.name.charAt(0).toUpperCase()}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+                <p className="text-sm font-medium text-gray-500">{title}</p>
               </div>
             </div>
-
-            {/* 🔹 User Info */}
-            <div className="text-center mt-3 px-3">
-              <h3 className="font-semibold text-gray-800 text-base">{u.name}</h3>
-              <p className="text-xs text-gray-500">{u.email}</p>
-            </div>
-
-            {/* Divider */}
-            {/* <div className="border-t mt-4"></div> */}
-
-            {/* 🔹 Role */}
-            <div className="py-3 text-center mb-4">
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600 shadow-sm">
-                {u.role}
-              </span>
-            </div>
-          </div>
-              ))}
-          </div>
-        )}
+          );
+        })}
       </div>
-
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Trips Chart */}
-      <div>
+      <div className="bg-white shadow-md rounded-xl p-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">
           Available Trips Overview
         </h2>
@@ -383,7 +345,7 @@ export default function AdminDashboard() {
         ) : trips.length === 0 ? (
           <div className="text-gray-600 text-sm">No trips available.</div>
         ) : (
-          <div className="bg-white shadow-md rounded-xl p-4 w-full max-w-6xl mx-auto overflow-x-auto">
+          <div>
             <div style={{ width: chartData.length * 140, minWidth: "100%" }}>
               <ResponsiveContainer width="100%" height={420}>
                 <BarChart
@@ -457,6 +419,40 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+      </div>
+      {/* Seat Utilization */}
+      {utilization && (
+        <div className="bg-white shadow-md rounded-xl p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">Seat Utilization</h2>
+        <ResponsiveContainer width="100%" height={420}>
+        <RePieChart>
+          <Pie
+            data={[
+              { name: "Booked Seats", value: utilization.bookedSeats },
+              { name: "Available Seats", value: utilization.availableSeats },
+            ]}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={120}
+            label
+          >
+            <Cell fill="#8884d8" />   {/* Booked */}
+            <Cell fill="#82ca9d" />   {/* Available */}
+            <Label
+              value={`Total: ${utilization.bookedSeats + utilization.availableSeats}`}
+              position="center"
+              style={{ fontSize: "16px", fontWeight: "bold", fill: "#333" }}
+            />
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </RePieChart>
+      </ResponsiveContainer>
+        </div>
+      )}
       </div>
     </div>
   );
