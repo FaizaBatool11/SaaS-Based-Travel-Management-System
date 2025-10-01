@@ -111,9 +111,10 @@ const handleAddUser = async () => {
     const fetchRoles = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/roles", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await axios.get(
+          `http://localhost:5000/api/roles?agencyId=${agencyId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setRoles(res.data);
       } catch (err) {
         console.error("Error fetching roles:", err);
