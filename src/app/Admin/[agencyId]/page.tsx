@@ -276,31 +276,27 @@ useEffect(() => {
       </div>
 
       {/* Welcome */}
-      <div className="rounded-xl p-6 shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+      {/* <div className="rounded-xl p-6 shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
         <h2 className="text-xl sm:text-2xl font-semibold">Welcome, Owner 👋</h2>
         <p className="text-sm sm:text-base opacity-90">
           Here’s an overview of your agency’s performance.
         </p>
-      </div>
-
-      {/* Stats */}
-      {/* <div className="grid grid-cols-4 gap-8">
-        {statsCards.map(({ title, value, icon: Icon }) => (
-          <div
-            key={title}
-            className="rounded-lg bg-white shadow p-6 flex items-center gap-5 hover:shadow-md transition"
-          >
-            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <Icon size={28} />
-            </div>
-
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">{value}</h3>
-              <p className="text-sm font-medium text-gray-500">{title}</p>
-            </div>
-          </div>
-        ))}
       </div> */}
+      <div className="rounded-2xl p-6 sm:p-8 shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white relative overflow-hidden">
+      {/* Background glass/blur effect */}
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-2xl"></div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Welcome to the Dashboard 👋
+        </h2>
+        <p className="mt-2 text-sm sm:text-base text-white/90">
+          Here’s an overview of your performance and activities.
+        </p>
+      </div>
+    </div>
+    
       {/* Stats */}
       <div className="grid grid-cols-4 gap-8">
         {statsCards.map(({ title, value, icon: Icon, color }) => {
