@@ -20,6 +20,8 @@ import {
 
 // Icons
 import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Plus, PieChart } from "lucide-react";
+import PermissionGate from "@/components/PermissionGate";
+import { useAuth } from "@/context/AuthContext";
 
 type Mode = "Bus" | "Train";
 
@@ -66,6 +68,7 @@ export default function AdminDashboard() {
   // const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [utilization, setUtilization] = useState<{ bookedSeats: number; availableSeats: number } | null>(null);
+  const { user, permissions } = useAuth();
 
 const fetchSeatUtilization = async (agencyId: number) => {
   try {
@@ -138,25 +141,49 @@ useEffect(() => {
 }, [activeAgency]);
 
 
+// useEffect(() => {
+//   const fetchAgencies = async () => {
+//     try {
+//       const token = localStorage.getItem("token");
+//       if (!token) return;
+
+//       const res = await axios.get("http://localhost:5000/api/agencies", {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+
+//       setAgencies(res.data);
+//     } catch (err) {
+//       console.error("Error fetching agencies:", err);
+//     }
+//   };
+
+//   fetchAgencies();
+// }, []); // ✅ empty deps
 useEffect(() => {
   const fetchAgencies = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const res = await axios.get("http://localhost:5000/api/agencies", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setAgencies(res.data);
+      if (permissions.includes("agencies:view")) {
+        // ✅ Owner case
+        const res = await axios.get("http://localhost:5000/api/agencies", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAgencies(res.data);
+      } else {
+        // ✅ Manager/Agent case → sirf apni agency show karo
+        if (user?.agencies) {
+          setAgencies(user.agencies);
+        }
+      }
     } catch (err) {
       console.error("Error fetching agencies:", err);
     }
   };
 
   fetchAgencies();
-}, []); // ✅ empty deps
-
+}, [permissions, user]);
 
   // ✅ Sync active agency
   useEffect(() => {
@@ -246,6 +273,7 @@ useEffect(() => {
         <h1 className="text-2xl font-bold">Dashboard</h1>
 
         <div className="flex items-center gap-6">
+          {/* <PermissionGate required="agency:view"> */}
           {agencies.length > 0 && (
             <select
               value={activeAgency ? activeAgency.id.toString() : ""}
@@ -259,6 +287,7 @@ useEffect(() => {
               ))}
             </select>
           )}
+          {/* </PermissionGate> */}
 
           <button className="relative text-gray-600 hover:text-blue-600">
             <Bell size={22} />
@@ -297,38 +326,40 @@ useEffect(() => {
       </div>
     </div>
     
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-8">
-        {statsCards.map(({ title, value, icon: Icon, color }) => {
-          const colorClasses: Record<string, string> = {
-            blue: "bg-blue-100 text-blue-600",
-            green: "bg-green-100 text-green-600",
-            purple: "bg-purple-100 text-purple-600",
-            orange: "bg-orange-100 text-orange-600",
-          };
+      {/* ✅ Stats with Permission */}
+      <PermissionGate required="stats:view">
+        <div className="grid grid-cols-4 gap-8">
+          {statsCards.map(({ title, value, icon: Icon, color }) => {
+            const colorClasses: Record<string, string> = {
+              blue: "bg-blue-100 text-blue-600",
+              green: "bg-green-100 text-green-600",
+              purple: "bg-purple-100 text-purple-600",
+              orange: "bg-orange-100 text-orange-600",
+            };
 
-          return (
-            <div
-              key={title}
-              className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition transform"
-            >
+            return (
               <div
-                className={`w-14 h-14 flex items-center justify-center rounded-full ${colorClasses[color]}`}
+                key={title}
+                className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition transform"
               >
-                <Icon size={30} />
+                <div
+                  className={`w-14 h-14 flex items-center justify-center rounded-full ${colorClasses[color]}`}
+                >
+                  <Icon size={30} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+                  <p className="text-sm font-medium text-gray-500">{title}</p>
+                </div>
               </div>
-
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </PermissionGate>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Trips Chart */}
+      <PermissionGate required="trips:read">
       <div className="bg-white shadow-md rounded-xl p-6">
         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">
           Available Trips Overview
@@ -416,7 +447,9 @@ useEffect(() => {
           </div>
         )}
       </div>
+      </PermissionGate>
       {/* Seat Utilization */}
+       {/* <PermissionGate required="seatutilization:read"> */}
       {utilization && (
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-800">Seat Utilization</h2>
@@ -449,6 +482,7 @@ useEffect(() => {
       </ResponsiveContainer>
         </div>
       )}
+      {/* </PermissionGate> */}
       </div>
     </div>
   );
