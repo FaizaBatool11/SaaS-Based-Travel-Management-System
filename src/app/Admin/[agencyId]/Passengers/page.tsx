@@ -350,10 +350,6 @@ export default function PassengersPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (token) fetchPassengers();
-  }, [token]);
-
   // const fetchPassengers = async () => {
   //   const freshToken = localStorage.getItem("token");
   //   if (!freshToken) return;
