@@ -371,7 +371,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useParams } from "next/navigation";
 import { FiEdit, FiTrash2, FiSearch } from "react-icons/fi";
 import { MdAddCircle } from "react-icons/md";
@@ -437,9 +437,18 @@ export default function TripDetail() {
         );
 
         setTrips(res.data || []);
-      } catch (err: any) {
+      // } catch (err: any) {
+      //   setError(err.response?.data?.message || err.message);
+      //   setTrips([]);
+      } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || err.message);
-        setTrips([]);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Unknown error occurred");
+      }
+      setTrips([]);
       } finally {
         setLoading(false);
       }
@@ -498,8 +507,17 @@ export default function TripDetail() {
         price: 0,
         seatsAvailable: 0,
       });
-    } catch (err: any) {
-      alert(err.response?.data?.message || err.message);
+    // } catch (err: any) {
+    //   alert(err.response?.data?.message || err.message);
+    // }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        alert(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Unknown error occurred");
+      }
     }
   };
 
@@ -518,8 +536,17 @@ export default function TripDetail() {
       );
 
       setTrips((prev) => prev.filter((trip) => trip.id !== id));
-    } catch (err: any) {
-      alert(err.response?.data?.message || err.message);
+    // } catch (err: any) {
+    //   alert(err.response?.data?.message || err.message);
+    // }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        alert(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Unknown error occurred");
+      }
     }
   };
 

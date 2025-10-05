@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";  // ✅ useParams import
+import { useRouter} from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import axios, { AxiosError } from "axios";
 
 interface AgencyFormData {
@@ -14,7 +15,7 @@ interface AgencyFormData {
 
 export default function AddAgencyPage() {
   const router = useRouter();
-  const params = useParams();
+  // const params = useParams();
   // const agencyId = params?.agencyId as string; // ✅ dynamic id
 
   const [isOpen, setIsOpen] = useState(false);
@@ -94,9 +95,11 @@ export default function AddAgencyPage() {
       {/* Navbar */}
       <header className="bg-gradient-to-b from-blue-50 to-white flex justify-between items-center px-8 py-4 shadow-sm">
         <div className="flex items-center space-x-2">
-          <img
+          <Image
             src="https://cdn-icons-png.flaticon.com/512/69/69906.png"
             alt="RideWay Logo"
+            width={32}   // h-8 = 32px
+            height={32}  // w-8 = 32px
             className="h-8 w-8"
           />
           <h1 className="text-xl font-bold text-blue-600 leading-tight">

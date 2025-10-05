@@ -310,7 +310,6 @@
 
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { PlusCircle, Search, X, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useParams } from "next/navigation"; // ✅ agencyId lene ke liye

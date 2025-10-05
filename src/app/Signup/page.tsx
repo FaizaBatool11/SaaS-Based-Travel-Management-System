@@ -180,6 +180,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -234,9 +235,11 @@ export default function Signup() {
       {/* Navbar */}
       <header className="bg-gradient-to-b from-blue-50 to-white flex justify-between items-center px-8 py-4 shadow-sm">
         <div className="flex items-center space-x-2">
-          <img
+          <Image
             src="https://cdn-icons-png.flaticon.com/512/69/69906.png"
             alt="RideWay Logo"
+            width={32}   // h-8 = 32px
+            height={32}  // w-8 = 32px
             className="h-8 w-8"
           />
           <h1 className="text-xl font-bold text-blue-600 leading-tight">

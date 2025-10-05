@@ -460,7 +460,7 @@ import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { MdAddCircle } from "react-icons/md";
 import { Pencil, CheckCircle, XCircle } from "lucide-react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import PermissionGate from "@/components/PermissionGate"; // ✅ import kiya
 
 // Interfaces
@@ -579,9 +579,14 @@ export default function BookingsPage() {
       setSelectedTrip("");
       setSelectedPassenger("");
       setSeats("");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Error adding booking");
-    }
+    // } catch (err: any) {
+    //   alert(err.response?.data?.message || "Error adding booking");
+    // }
+    } catch (err) {
+  const error = err as AxiosError<{ message?: string }>;
+  alert(error.response?.data?.message || "Error adding booking");
+}
+
   };
 
   // Update Status

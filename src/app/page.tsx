@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { TicketIcon, CheckBadgeIcon, ReceiptRefundIcon } from "@heroicons/react/24/outline"; // Added icons
 
 export default function LandingPage() {
@@ -31,9 +32,11 @@ export default function LandingPage() {
       <header className="flex justify-between items-center px-8 py-4 shadow-sm">
         <div className="flex items-center space-x-2">
           {/* Placeholder Logo Icon (bus+train idea) */}
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/69/69906.png" 
+          <Image
+            src="https://cdn-icons-png.flaticon.com/512/69/69906.png"
             alt="RideWay Logo"
+            width={32}   // h-8 = 32px
+            height={32}  // w-8 = 32px
             className="h-8 w-8"
           />
           <h1 className="text-xl font-bold text-blue-600 leading-tight">
