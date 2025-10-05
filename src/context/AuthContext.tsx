@@ -145,11 +145,102 @@
 //   return context;
 // };
 
+// "use client";
+// import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+// import axios from "axios";
+
+// // ✅ Define a proper User interface (you can expand this as needed)
+// interface Agency {
+//   id: number;
+//   name: string;
+// }
+
+// interface User {
+//   id: number;
+//   name: string;
+//   email: string;
+//   role: string;
+//   permissions?: string[];
+//   agencies?: Agency[];
+// }
+
+// // ✅ Define the AuthContext interface
+// interface AuthContextType {
+//   user: User | null;
+//   permissions: string[];
+//   loading: boolean;
+//   login: (userObj: User, token: string) => void;
+//   logout: () => void;
+// }
+
+// const AuthContext = createContext<AuthContextType | null>(null);
+
+// export const AuthProvider = ({ children }: { children: ReactNode }) => {
+//   const [user, setUser] = useState<User | null>(null);
+//   const [permissions, setPermissions] = useState<string[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const setAuth = (userObj: User) => {
+//     setUser(userObj);
+//     setPermissions(userObj?.permissions || []);
+//   };
+
+//   // ✅ Login function
+//   const login = (userObj: User, token: string) => {
+//     setAuth(userObj);
+//     localStorage.setItem("token", token);
+//     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+//   };
+
+//   // ✅ Logout function
+//   const logout = () => {
+//     setUser(null);
+//     setPermissions([]);
+//     localStorage.removeItem("token");
+//     localStorage.removeItem("agencies");
+//     localStorage.removeItem("activeAgencyId");
+//     delete axios.defaults.headers.common["Authorization"];
+//   };
+
+//   // ✅ Load current user on mount
+//   useEffect(() => {
+//     const token = localStorage.getItem("token");
+//     if (token) {
+//       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+//     }
+
+//     (async () => {
+//       try {
+//         const res = await axios.get<User>("http://localhost:5000/api/loginUser");
+//         setAuth(res.data);
+//       } catch (err: unknown) {
+//         console.error("Auth fetch error:", err);
+//         setUser(null);
+//         setPermissions([]);
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, []);
+
+//   return (
+//     <AuthContext.Provider value={{ user, permissions, login, logout, loading }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+// export const useAuth = () => {
+//   const context = useContext(AuthContext);
+//   if (!context) throw new Error("useAuth must be used within AuthProvider");
+//   return context;
+// };
+
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import axios from "axios";
 
-// ✅ Define a proper User interface (you can expand this as needed)
+// ------------------ Types ------------------
 interface Agency {
   id: number;
   name: string;
@@ -160,11 +251,12 @@ interface User {
   name: string;
   email: string;
   role: string;
-  permissions?: string[];
-  agencies?: Agency[];
+  permissions: string[];
+  agencies: Agency[];
+  agencyId: number | null;
 }
 
-// ✅ Define the AuthContext interface
+// ------------------ Auth Context ------------------
 interface AuthContextType {
   user: User | null;
   permissions: string[];
@@ -175,24 +267,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// ------------------ AuthProvider ------------------
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ------------------ Set Auth ------------------
   const setAuth = (userObj: User) => {
     setUser(userObj);
     setPermissions(userObj?.permissions || []);
   };
 
-  // ✅ Login function
-  const login = (userObj: User, token: string) => {
-    setAuth(userObj);
-    localStorage.setItem("token", token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  };
+  // ------------------ Login ------------------
+ const login = (userObj: User, token: string) => {
+  setAuth(userObj);
+  localStorage.setItem("token", token);
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+};
 
-  // ✅ Logout function
+  // ------------------ Logout ------------------
   const logout = () => {
     setUser(null);
     setPermissions([]);
@@ -202,27 +296,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     delete axios.defaults.headers.common["Authorization"];
   };
 
-  // ✅ Load current user on mount
+  // ------------------ Load current user ------------------
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  const token = localStorage.getItem("token");
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+
+  const fetchCurrentUser = async () => {
+    try {
+      if (!token) return setLoading(false);
+
+      // ✅ Call GET currentUser, not login
+      const res = await axios.get<User>("http://localhost:5000/api/auth/currentUser");
+      setAuth(res.data);
+    } catch (err: unknown) {
+      console.error("Auth fetch error:", err);
+      setUser(null);
+      setPermissions([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    (async () => {
-      try {
-        const res = await axios.get<User>("http://localhost:5000/api/loginUser");
-        setAuth(res.data);
-      } catch (err: unknown) {
-        console.error("Auth fetch error:", err);
-        setUser(null);
-        setPermissions([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  fetchCurrentUser();
+}, []);
 
+  // ------------------ Provider ------------------
   return (
     <AuthContext.Provider value={{ user, permissions, login, logout, loading }}>
       {children}
@@ -230,6 +330,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// ------------------ useAuth Hook ------------------
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");

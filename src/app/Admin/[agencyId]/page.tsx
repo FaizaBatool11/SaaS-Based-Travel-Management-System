@@ -19,7 +19,7 @@ import {
 } from "recharts";
 
 // Icons
-import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon} from "lucide-react";
+import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Building} from "lucide-react";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/context/AuthContext";
 
@@ -81,10 +81,15 @@ const fetchSeatUtilization = async (agencyId: number) => {
 
 useEffect(() => {
   if (!activeAgency) return;
+
   fetchTrips(activeAgency.id);
   fetchStats(activeAgency.id);
-  fetchSeatUtilization(activeAgency.id); // ✅ yahan call add karo
-}, [activeAgency]);
+
+  // ✅ Only fetch if user has permission
+  if (permissions.includes("seat_utilization:view")) {
+    fetchSeatUtilization(activeAgency.id);
+  }
+}, [activeAgency, permissions]);
 
 const fetchTrips = async (agencyId: number) => {
   if (!agencyId) return;
@@ -136,43 +141,38 @@ useEffect(() => {
   fetchStats(activeAgency.id);
 }, [activeAgency]);
 
-
-// useEffect(() => {
-//   const fetchAgencies = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       if (!token) return;
-
-//       const res = await axios.get("http://localhost:5000/api/agencies", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       setAgencies(res.data);
-//     } catch (err) {
-//       console.error("Error fetching agencies:", err);
-//     }
-//   };
-
-//   fetchAgencies();
-// }, []); // ✅ empty deps
 useEffect(() => {
   const fetchAgencies = async () => {
     try {
-      const token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
       if (!token) return;
 
+      // Always set axios header to latest token
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      let agencyList: Agency[] = [];
+
       if (permissions.includes("agencies:view")) {
-        // ✅ Owner case
-        const res = await axios.get("http://localhost:5000/api/agencies", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAgencies(res.data);
-      } else {
-        // ✅ Manager/Agent case → sirf apni agency show karo
-        if (user?.agencies) {
-          setAgencies(user.agencies);
-        }
+        // Owner → fetch all agencies from backend
+        const res = await axios.get("http://localhost:5000/api/agencies");
+        agencyList = res.data;
+      } else if (user?.agencies) {
+        // Manager/Agent → show only own agencies
+        agencyList = user.agencies;
       }
+
+      setAgencies(agencyList);
+
+      // Auto-set active agency if none selected
+      if (!activeAgency && agencyList.length > 0) {
+        const storedId = localStorage.getItem("activeAgencyId");
+        const selected =
+          agencyList.find(a => a.id.toString() === storedId) || agencyList[0];
+
+        setActiveAgency(selected);
+        localStorage.setItem("activeAgencyId", selected.id.toString());
+      }
+
     } catch (err) {
       console.error("Error fetching agencies:", err);
     }
@@ -180,6 +180,7 @@ useEffect(() => {
 
   fetchAgencies();
 }, [permissions, user]);
+
 
   // ✅ Sync active agency
   useEffect(() => {
@@ -243,14 +244,13 @@ useEffect(() => {
     router.push(`/Admin/${selected.id}`);
   };
 
-  const statsCards = stats
-    ? [
-        { title: "Passengers", value: stats.passengers, icon: UsersIcon, color: "blue" },
-        { title: "Trips", value: stats.trips, icon: Bus, color: "green" },
-        { title: "Bookings", value: stats.bookings, icon: Ticket, color: "purple" },
-        { title: "Payments", value: "PKR 50,000", icon: CreditCard, color: "orange" },
-      ]
-    : [];
+  // const statsCards = stats
+  //   ? [
+  //       { title: "Passengers", value: stats.passengers, icon: UsersIcon, color: "blue" },
+  //       { title: "Trips", value: stats.trips, icon: Bus, color: "green" },
+  //       { title: "Bookings", value: stats.bookings, icon: Ticket, color: "purple" },
+  //     ]
+  //   : [];
 
   const chartData = trips.map((trip) => ({
     id: trip.id,
@@ -267,46 +267,45 @@ useEffect(() => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Dashboard</h1>
+       <div className="flex items-center gap-4">
+        {permissions.includes("agencies:view") && agencies.length > 0 ? (
+          // ✅ Owner: show dropdown
+          <select
+            value={activeAgency ? activeAgency.id.toString() : ""}
+            onChange={handleAgencyChange}
+            className="border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {agencies.map((agency) => (
+              <option key={agency.id} value={agency.id.toString()}>
+                {agency.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          // ✅ Non-owner: show label with icon
+          <span className="flex items-center gap-2 px-4 py-2 bg-white text-gray-800 rounded-md shadow-sm hover:shadow-lg transition transform text-md">
+            <Building size={16} className="text-blue-600" />
+            {user?.agencies[0]?.name || "No Agency"}
+          </span>
+        )}
 
-        <div className="flex items-center gap-6">
-          {/* <PermissionGate required="agency:view"> */}
-          {agencies.length > 0 && (
-            <select
-              value={activeAgency ? activeAgency.id.toString() : ""}
-              onChange={handleAgencyChange}
-              className="border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {agencies.map((agency) => (
-                <option key={agency.id} value={agency.id.toString()}>
-                  {agency.name}
-                </option>
-              ))}
-            </select>
-          )}
-          {/* </PermissionGate> */}
+        {/* Notification & Settings buttons */}
+        <button className="relative text-gray-600 hover:text-blue-600">
+          <Bell size={22} />
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
 
-          <button className="relative text-gray-600 hover:text-blue-600">
-            <Bell size={22} />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+        <button className="text-gray-600 hover:text-blue-600">
+          <Settings size={22} />
+        </button>
 
-          <button className="text-gray-600 hover:text-blue-600">
-            <Settings size={22} />
-          </button>
-
-          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold cursor-pointer">
-            F
-          </div>
+        {/* User Avatar with first letter of email */}
+        <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold cursor-pointer">
+          {user?.email?.[0].toUpperCase() || "U"}
         </div>
       </div>
+      </div>
 
-      {/* Welcome */}
-      {/* <div className="rounded-xl p-6 shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-        <h2 className="text-xl sm:text-2xl font-semibold">Welcome, Owner 👋</h2>
-        <p className="text-sm sm:text-base opacity-90">
-          Here’s an overview of your agency’s performance.
-        </p>
-      </div> */}
       <div className="rounded-2xl p-6 sm:p-8 shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white relative overflow-hidden">
       {/* Background glass/blur effect */}
       <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-2xl"></div>
@@ -321,37 +320,64 @@ useEffect(() => {
         </p>
       </div>
     </div>
-    
-      {/* ✅ Stats with Permission */}
-      <PermissionGate required="stats:view">
-        <div className="grid grid-cols-4 gap-8">
-          {statsCards.map(({ title, value, icon: Icon, color }) => {
-            const colorClasses: Record<string, string> = {
-              blue: "bg-blue-100 text-blue-600",
-              green: "bg-green-100 text-green-600",
-              purple: "bg-purple-100 text-purple-600",
-              orange: "bg-orange-100 text-orange-600",
-            };
 
-            return (
-              <div
-                key={title}
-                className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition transform"
-              >
-                <div
-                  className={`w-14 h-14 flex items-center justify-center rounded-full ${colorClasses[color]}`}
-                >
-                  <Icon size={30} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-                  <p className="text-sm font-medium text-gray-500">{title}</p>
-                </div>
-              </div>
-            );
-          })}
+      <div className="grid grid-cols-4 gap-8">
+      {/* Passengers */}
+      <PermissionGate required="stats:passengers:view">
+        <div className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg transition transform">
+          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <UsersIcon size={30} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800">{stats?.passengers ?? 0}</h3>
+            <p className="text-sm font-medium text-gray-500">Passengers</p>
+          </div>
         </div>
       </PermissionGate>
+
+      {/* Trips */}
+      <PermissionGate required="stats:trips:view">
+        <div className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg transition transform">
+          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+            <Bus size={30} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800">{stats?.trips ?? 0}</h3>
+            <p className="text-sm font-medium text-gray-500">Trips</p>
+          </div>
+        </div>
+      </PermissionGate>
+
+      {/* Bookings */}
+      <PermissionGate required="stats:bookings:view">
+        <div className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg transition transform">
+          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-purple-100 text-purple-600">
+            <Ticket size={30} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800">{stats?.bookings ?? 0}</h3>
+            <p className="text-sm font-medium text-gray-500">Bookings</p>
+          </div>
+        </div>
+      </PermissionGate>
+
+      {/* ✅ Seats Overview */}
+      <PermissionGate required="seat_utilization:view">
+        <div className="rounded-2xl bg-white shadow-md p-6 flex items-center gap-5 hover:shadow-lg transition transform">
+          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            <Bus size={30} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800">
+              {utilization
+                ? `${utilization.bookedSeats}/${utilization.bookedSeats + utilization.availableSeats}`
+                : "0/0"}
+            </h3>
+            <p className="text-sm font-medium text-gray-500">Seats (Booked/Total)</p>
+          </div>
+        </div>
+      </PermissionGate>
+    </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Trips Chart */}
@@ -447,7 +473,7 @@ useEffect(() => {
       </div>
       </PermissionGate>
       {/* Seat Utilization */}
-       {/* <PermissionGate required="seatutilization:read"> */}
+       <PermissionGate required="seat_utilization:view">
       {utilization && (
         <div className="bg-white shadow-md rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-800">Seat Utilization</h2>
@@ -480,7 +506,7 @@ useEffect(() => {
       </ResponsiveContainer>
         </div>
       )}
-      {/* </PermissionGate> */}
+      </PermissionGate>
       </div>
     </div>
   );
