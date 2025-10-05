@@ -6,8 +6,6 @@ import Image from "next/image";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   TicketIcon,
-  CreditCardIcon,
-  ReceiptRefundIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -37,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const params = useParams();
   const agencyId = params?.agencyId as string;
   const router = useRouter();
- const { user, permissions, logout } = useAuth();
+ const {permissions, logout } = useAuth();
 
   const [sections, setSections] = useState<Section[]>([]);
 

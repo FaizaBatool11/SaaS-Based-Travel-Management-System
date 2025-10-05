@@ -19,7 +19,7 @@ import {
 } from "recharts";
 
 // Icons
-import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Building} from "lucide-react";
+import { Bell, Settings, Bus, Ticket, Users as UsersIcon, Building} from "lucide-react";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/context/AuthContext";
 
@@ -144,7 +144,7 @@ useEffect(() => {
 useEffect(() => {
   const fetchAgencies = async () => {
     try {
-      let token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
       if (!token) return;
 
       // Always set axios header to latest token
@@ -179,7 +179,7 @@ useEffect(() => {
   };
 
   fetchAgencies();
-}, [permissions, user]);
+}, [permissions, user, activeAgency]);
 
 
   // ✅ Sync active agency
