@@ -94,9 +94,11 @@ export default function LandingPage() {
           transition={{ duration: 0.8 }}
           className="md:w-1/2 flex justify-center"
         >
-          <img
+          <Image
             src="https://img.freepik.com/free-photo/morskie-oko-tatry_1204-510.jpg?semt=ais_hybrid&w=740&q=80"
             alt="Travel illustration"
+            width={740}
+            height={500}
             className="rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95 cursor-pointer"
           />
         </motion.div>

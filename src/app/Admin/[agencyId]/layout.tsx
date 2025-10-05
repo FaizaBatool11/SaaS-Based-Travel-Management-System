@@ -313,7 +313,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {sections.map(({ href, label, icon: Icon, isLogout, perm }) => {
             const active = pathname === href;
             return (
-              <PermissionGate required={perm} key={label}>
+              <PermissionGate required={perm ?? ""} key={label}>
                 {isLogout ? (
                   <button
                     onClick={() => setLogoutModalOpen(true)}
@@ -382,7 +382,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {sections.map(({ href, label, icon: Icon, isLogout, perm }) => {
                 const active = pathname === href;
                 return (
-                  <PermissionGate required={perm} key={label}>
+                  <PermissionGate required={perm ?? ""} key={label}>
                     {isLogout ? (
                       <button
                         onClick={() => {
