@@ -309,7 +309,7 @@
 // }
 
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { PlusCircle, Search, X, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useParams } from "next/navigation"; // ✅ agencyId lene ke liye
@@ -354,7 +354,21 @@ export default function PassengersPage() {
     if (token) fetchPassengers();
   }, [token]);
 
-  const fetchPassengers = async () => {
+  // const fetchPassengers = async () => {
+  //   const freshToken = localStorage.getItem("token");
+  //   if (!freshToken) return;
+
+  //   try {
+  //     const res = await axios.get(
+  //       `http://localhost:5000/api/passengers/getAllPassengers?agencyId=${agencyId}`,
+  //       { headers: { Authorization: `Bearer ${freshToken}` } }
+  //     );
+  //     setPassengers(res.data);
+  //   } catch (err) {
+  //     console.error("Error fetching passengers:", err);
+  //   }
+  // };
+  const fetchPassengers = useCallback(async () => {
     const freshToken = localStorage.getItem("token");
     if (!freshToken) return;
 
@@ -367,7 +381,11 @@ export default function PassengersPage() {
     } catch (err) {
       console.error("Error fetching passengers:", err);
     }
-  };
+  }, [agencyId]); 
+
+  useEffect(() => {
+    if (token) fetchPassengers();
+  }, [token, fetchPassengers]);
 
   const handleAddPassenger = async () => {
     if (!name || !age || !phone) {

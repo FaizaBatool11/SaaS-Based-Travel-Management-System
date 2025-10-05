@@ -371,7 +371,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useParams } from "next/navigation";
 import { FiEdit, FiTrash2, FiSearch } from "react-icons/fi";
 import { MdAddCircle } from "react-icons/md";

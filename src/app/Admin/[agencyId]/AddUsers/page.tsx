@@ -265,7 +265,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
 import { FiSearch } from "react-icons/fi";
@@ -299,18 +299,30 @@ export default function UsersPage() {
   const [roleId, setRoleId] = useState("");
 
   // ✅ Fetch users
-  const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `http://localhost:5000/api/users/${agencyId}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Error fetching users:", err);
-    }
-  };
+  // const fetchUsers = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const res = await axios.get(
+  //       `http://localhost:5000/api/users/${agencyId}`,
+  //       { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+  //     );
+  //     setUsers(res.data);
+  //   } catch (err) {
+  //     console.error("Error fetching users:", err);
+  //   }
+  // };
+  const fetchUsers = useCallback(async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get(
+      `http://localhost:5000/api/users/${agencyId}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+    );
+    setUsers(res.data);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+  }
+}, [agencyId]);
 
   // ✅ Add user
   const handleAddUser = async () => {
@@ -350,22 +362,39 @@ export default function UsersPage() {
   };
 
   // ✅ Fetch roles
+  // useEffect(() => {
+  //   const fetchRoles = async () => {
+  //     try {
+  //       const token = localStorage.getItem("token");
+  //       const res = await axios.get(
+  //         `http://localhost:5000/api/roles?agencyId=${agencyId}`,
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+  //       setRoles(res.data);
+  //     } catch (err) {
+  //       console.error("Error fetching roles:", err);
+  //     }
+  //   };
+  //   fetchRoles();
+  //   fetchUsers();
+  // }, [agencyId]);
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `http://localhost:5000/api/roles?agencyId=${agencyId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setRoles(res.data);
-      } catch (err) {
-        console.error("Error fetching roles:", err);
-      }
-    };
-    fetchRoles();
-    fetchUsers();
-  }, [agencyId]);
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `http://localhost:5000/api/roles?agencyId=${agencyId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRoles(res.data);
+    } catch (err) {
+      console.error("Error fetching roles:", err);
+    }
+  };
+
+  fetchRoles();
+  fetchUsers();
+}, [agencyId, fetchUsers]); 
 
   // ✅ Search filter
   const filteredUsers = users.filter((u) =>

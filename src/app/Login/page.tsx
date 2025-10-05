@@ -226,10 +226,18 @@ export default function Login() {
       }
 
       console.log("Login successful:", user);
-    } catch (err: any) {
+    } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
       console.error(err.response?.data?.message || err.message);
       alert(err.response?.data?.message || err.message || "Login failed!");
+    } else if (err instanceof Error) {
+      console.error(err.message);
+      alert(err.message);
+    } else {
+      console.error("Unknown error", err);
+      alert("Login failed!");
     }
+  }
   };
 
   const iconStyle = { fill: "white", stroke: "black", strokeWidth: 20 };

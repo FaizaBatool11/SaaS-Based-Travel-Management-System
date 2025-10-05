@@ -19,7 +19,7 @@ import {
 } from "recharts";
 
 // Icons
-import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon, Plus, PieChart } from "lucide-react";
+import { Bell, Settings, Bus, Ticket, CreditCard, Users as UsersIcon} from "lucide-react";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/context/AuthContext";
 
@@ -45,13 +45,6 @@ type Stats = {
   passengers: number;
   trips: number;
   bookings: number;
-};
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
 };
 
 export default function AdminDashboard() {
@@ -108,9 +101,12 @@ const fetchTrips = async (agencyId: number) => {
     );
 
     setTrips(res.data || []);
-  } catch (err: any) {
-    setError(err?.response?.data?.message || "Error fetching trips");
-    setTrips([]);
+  } catch (err: unknown) {
+  if (axios.isAxiosError(err)) {
+    setError(err.response?.data?.message || "Error fetching trips");
+  } else {
+    setError("Unknown error occurred");
+  }
   } finally {
     setLoading(false);
   }
@@ -191,10 +187,10 @@ useEffect(() => {
 
     const storedActiveId = localStorage.getItem("activeAgencyId");
 
-    let selectedAgency =
-      agencies.find((a) => a.id.toString() === paramAgencyId) ||
-      agencies.find((a) => a.id.toString() === storedActiveId) ||
-      agencies[0];
+    const selectedAgency =
+    agencies.find((a) => a.id.toString() === paramAgencyId) ||
+    agencies.find((a) => a.id.toString() === storedActiveId) ||
+    agencies[0];
 
     if (!selectedAgency) return;
 
@@ -364,6 +360,8 @@ useEffect(() => {
         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">
           Available Trips Overview
         </h2>
+
+        {error && <p className="text-red-600">{error}</p>}
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
