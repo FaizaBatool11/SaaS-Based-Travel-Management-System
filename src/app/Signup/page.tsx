@@ -215,8 +215,9 @@ export default function Signup() {
         password: formData.password,
       };
 
-      const response = await axios.post("http://localhost:5000/api/auth/signup", payload);
-
+      // const response = await axios.post("http://localhost:5000/api/auth/signup", payload);
+      // const response = await axios.post("http://backend-saas-based-travel-management-system-production.up.railway.app/api/auth/Signup", payload);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/Signup`,payload);
       alert("Signup successful!");
       router.push("/Login");
 
