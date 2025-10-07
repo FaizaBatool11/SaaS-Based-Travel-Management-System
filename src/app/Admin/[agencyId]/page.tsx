@@ -69,7 +69,7 @@ const fetchSeatUtilization = async (agencyId: number) => {
     if (!token) throw new Error("Token missing");
 
     const res = await axios.get(
-      `http://localhost:5000/api/seatUtilization/${agencyId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/seatUtilization/${agencyId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -101,7 +101,7 @@ const fetchTrips = async (agencyId: number) => {
     if (!token) throw new Error("Token missing");
 
     const res = await axios.get(
-      `http://localhost:5000/api/trips/getAllTrips?agencyId=${agencyId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/trips/getAllTrips?agencyId=${agencyId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -125,7 +125,7 @@ const fetchStats = async (agencyId: number) => {
     if (!token) throw new Error("Token missing");
 
     const res = await axios.get(
-      `http://localhost:5000/api/dashboard/stats/${agencyId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats/${agencyId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -154,7 +154,7 @@ useEffect(() => {
 
       if (permissions.includes("agencies:view")) {
         // Owner → fetch all agencies from backend
-        const res = await axios.get("http://localhost:5000/api/agencies");
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/agencies`);
         agencyList = res.data;
       } else if (user?.agencies) {
         // Manager/Agent → show only own agencies
@@ -212,7 +212,7 @@ useEffect(() => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/switchAgency",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/switchAgency`,
         { agencyId: activeAgency.id },
         { headers: { Authorization: `Bearer ${oldToken}` } }
       );

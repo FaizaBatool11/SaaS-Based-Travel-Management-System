@@ -432,7 +432,7 @@ export default function TripDetail() {
         }
 
         const res = await axios.get(
-          `http://localhost:5000/api/trips/getAllTrips?agencyId=${encodeURIComponent(activeAgencyId)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/trips/getAllTrips?agencyId=${encodeURIComponent(activeAgencyId)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -478,7 +478,7 @@ export default function TripDetail() {
       if (isEditing) {
         const body = { ...newTrip, agencyId: Number(activeAgencyId) };
         const res = await axios.put(
-          `http://localhost:5000/api/trips/updateTrip/${newTrip.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/trips/updateTrip/${newTrip.id}`,
           body,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -488,7 +488,7 @@ export default function TripDetail() {
       } else {
         const body = { ...newTrip, agencyId: Number(activeAgencyId) };
         const res = await axios.post(
-          "http://localhost:5000/api/trips/addTrip",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/trips/addTrip`,
           body,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -531,7 +531,7 @@ export default function TripDetail() {
       if (!activeAgencyId) throw new Error("No agency selected");
 
       await axios.delete(
-        `http://localhost:5000/api/trips/deleteTrip/${id}?agencyId=${encodeURIComponent(activeAgencyId)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/trips/deleteTrip/${id}?agencyId=${encodeURIComponent(activeAgencyId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

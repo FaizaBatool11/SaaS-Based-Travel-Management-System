@@ -198,7 +198,7 @@ export default function Login() {
     console.log("Submitting login:", formData.email);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/Login", formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/Login`, formData);
       const { token, user } = response.data;
 
       // 🔹 Clear old agency
