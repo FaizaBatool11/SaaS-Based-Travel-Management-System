@@ -39,14 +39,9 @@ export default function Signup() {
 
 
       // const response = await axios.post("http://localhost:5000/api/auth/signup", payload);
-      // const response = await axios.post("NEXT_PUBLIC_API_URL/api/auth/Signup", payload);
-      const BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://backend-saas-based-travel-management-system-production.up.railway.app";
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/Signup`, payload);
 
-      console.log("BASE_URL =", BASE_URL); // optional: for debugging
-
-      const response = await axios.post(`${BASE_URL}/api/auth/signup`, payload);
+      // const response = await axios.post(`${BASE_URL}/api/auth/signup`, payload);
       alert("Signup successful!");
       router.push("/Login");
 
