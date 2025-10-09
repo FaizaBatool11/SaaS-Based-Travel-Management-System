@@ -151,15 +151,10 @@ useEffect(() => {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       let agencyList: Agency[] = [];
-      const BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://backend-saas-based-travel-management-system-production.up.railway.app";
-
-      console.log("BASE_URL =", BASE_URL);
 
       if (permissions.includes("agencies:view")) {
         // Owner → fetch all agencies from backend
-        const res = await axios.get(`${BASE_URL}/api/agencies`);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/agencies`);
         agencyList = res.data;
       } else if (user?.agencies) {
         // Manager/Agent → show only own agencies
