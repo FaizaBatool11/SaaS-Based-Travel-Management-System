@@ -37,6 +37,8 @@ export default function Signup() {
         password: formData.password,
       };
 
+      // test
+
       // const response = await axios.post("http://localhost:5000/api/auth/signup", payload);
       // const response = await axios.post("NEXT_PUBLIC_API_URL/api/auth/Signup", payload);
       const BASE_URL =
