@@ -59,17 +59,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ------------------ Load current user ------------------
-  useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  }
+useEffect(() => {
+  // Guard against StrictMode double-invoke in dev: ensure single fetch per mount
+  let hasFetched = false;
 
-  const fetchCurrentUser = async () => {
+  const init = async () => {
+    if (hasFetched) return;
+    hasFetched = true;
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+
     try {
       if (!token) return setLoading(false);
 
-      // ✅ Call GET currentUser, not login
       const res = await axios.get<User>(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/currentUser`);
       setAuth(res.data);
     } catch (err: unknown) {
@@ -81,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  fetchCurrentUser();
+  void init();
 }, []);
 
   // ------------------ Provider ------------------

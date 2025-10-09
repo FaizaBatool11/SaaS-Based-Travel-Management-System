@@ -104,6 +104,7 @@ const fetchTrips = async (agencyId: number) => {
       `${process.env.NEXT_PUBLIC_API_URL}/api/trips/getAllTrips?agencyId=${agencyId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
+    console.log("Trips",res.data);
 
     setTrips(res.data || []);
   } catch (err: unknown) {
@@ -135,11 +136,6 @@ const fetchStats = async (agencyId: number) => {
   }
 };
 
-useEffect(() => {
-  if (!activeAgency) return;
-  fetchTrips(activeAgency.id);
-  fetchStats(activeAgency.id);
-}, [activeAgency]);
 
 useEffect(() => {
   const fetchAgencies = async () => {
@@ -179,7 +175,7 @@ useEffect(() => {
   };
 
   fetchAgencies();
-}, [permissions, user, activeAgency]);
+}, [permissions, user]);
 
 
   // ✅ Sync active agency
